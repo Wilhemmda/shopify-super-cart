@@ -1,0 +1,27 @@
+# Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
+
+name = "super-cart"
+client_id = "0523518337bdfb0a2340016b919e85d0"
+application_url = "https://tgp-publicly-potentially-impressive.trycloudflare.com"
+embedded = true
+
+[access_scopes]
+# Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
+scopes = "read_themes, write_themes, read_content, write_content"
+
+[auth]
+redirect_urls = [
+  "https://tgp-publicly-potentially-impressive.trycloudflare.com/auth/callback",
+  "https://tgp-publicly-potentially-impressive.trycloudflare.com/auth/shopify/callback",
+  "https://tgp-publicly-potentially-impressive.trycloudflare.com/api/auth/callback"
+]
+
+[webhooks]
+api_version = "2023-10"
+
+[pos]
+embedded = false
+
+[build]
+automatically_update_urls_on_dev = true
+dev_store_url = "demowil.myshopify.com"
