@@ -16,8 +16,6 @@ import {
 } from "@shopify/polaris";
 import db from '../db.server'
 import { authenticate } from "../shopify.server";
-import { cli } from "@remix-run/dev";
-import prisma from "~/db.server";
 
 
 export const loader = async ({ request }) => {
@@ -46,7 +44,7 @@ export const loader = async ({ request }) => {
     session,
     theme_id: theme.data[0].id,
     asset: {
-      key: "sections/cart-drawer.liquid"
+      key: "snippets/cart-drawer.liquid"
     }
   })
 
@@ -70,27 +68,11 @@ export async function action({ request }) {
   const { session } = await authenticate.admin(request);
   const { admin } = await authenticate.admin(request);
   const data = await request.formData()
-  const id = data.get('id')
-  const value = data.get('value')
+  const id = parseInt(data.get('id'))
   try{
-    const asset = updateCartFile(admin, session, "sections/cart-drawer.liquid", value, id)
-    // const asset = new admin.rest.resources.Asset({session})
-    // asset.theme_id = 157176791322
-    // asset.key = "sections/cart-drawer.liquid"
-    // asset.value =
-    // `{% comment %}
-    // OKKKK
-    // {% endcomment %}
-    // {%- render 'super-cart' -%}"`
-    // await asset.save({update: true})
-    console.table(asset)
-
-    // const update = await updateCartFile(admin, session, "sections/cart-drawer.liquid", value, id)
-    // const file = await admin.rest.resources.Asset.all({
-    //   session,
-    //   theme_id: Number(id),
-    // })
-    // console.log(file.data[0].value)
+    const template = await getTemplate()
+    const asset = await updateCartFile(admin, session, "snippets/cart-drawer.liquid", template, id)
+    console.log(asset)
   } catch (e) {
     console.error(e)
   }
@@ -103,19 +85,28 @@ export async function action({ request }) {
 ///////////////////////////////////////////////
 
 
-
+/**
+ * 
+ * @param {*} admin 
+ * @param {*} session 
+ * @param {String} path 
+ * @param {String} content 
+ * @param {Number} theme_id 
+ * @returns 
+ */
 async function updateCartFile(admin, session, path, content, theme_id) {
   const asset = new admin.rest.resources.Asset({session})
-  asset.theme_id = Number(theme_id)
+  asset.theme_id = theme_id
   asset.key = path
-  asset.value =
-  `%{% comment %}
-  ${content}
-  {% endcomment %}
-  {%- render 'super-cart' -%}"`
+  asset.value = content
   await asset.save({update:true})
 }
-
+async function getTemplate() {
+  const template = await db.superCart.findUnique({where: {id :  1}})
+  if(template === null) throw new Error('Template not found')
+  const code = (`${template.title} \n ${template.option1} \n ${template.form} \n ${template.option2} \n ${template.total} \n ${template.option3} \n ${template.footer}`)
+  return code
+}
 
 ///////////////////////////////////////////////////////
 
@@ -124,8 +115,9 @@ export default function Index() {
   // const nav = useNavigation();
   const data = useLoaderData()
   const submit = useSubmit();
-  const activeSuperCart = () => submit({id: data.id, value: data.value}, {method: 'PUT'})
+  const activeSuperCart = () => submit({id: data.id}, {method: 'PUT'})
   const activeNull = () => submit({}, {method:'PUT'})
+  console.log(data)
   return (
     <Page>
       <ui-title-bar title="Your customized cart!">
@@ -140,7 +132,7 @@ export default function Index() {
               <VerticalStack gap="5">
                 <VerticalStack gap="2">
                   <Text as="h2" variant="headingMd">
-                    OK {data.value}
+                    OK
                   </Text>
                   <Text variant="bodyMd" as="p">
                   </Text>
