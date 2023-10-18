@@ -2,7 +2,7 @@
 
 name = "super-cart"
 client_id = "0523518337bdfb0a2340016b919e85d0"
-application_url = "https://ignore-albany-bone-cubic.trycloudflare.com"
+application_url = "https://stretch-eye-influenced-canvas.trycloudflare.com"
 embedded = true
 
 [access_scopes]
@@ -11,9 +11,9 @@ scopes = "read_themes, write_themes, read_content, write_content"
 
 [auth]
 redirect_urls = [
-  "https://ignore-albany-bone-cubic.trycloudflare.com/auth/callback",
-  "https://ignore-albany-bone-cubic.trycloudflare.com/auth/shopify/callback",
-  "https://ignore-albany-bone-cubic.trycloudflare.com/api/auth/callback"
+  "https://stretch-eye-influenced-canvas.trycloudflare.com/auth/callback",
+  "https://stretch-eye-influenced-canvas.trycloudflare.com/auth/shopify/callback",
+  "https://stretch-eye-influenced-canvas.trycloudflare.com/api/auth/callback"
 ]
 
 [webhooks]

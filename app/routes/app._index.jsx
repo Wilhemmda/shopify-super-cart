@@ -69,13 +69,17 @@ export async function action({ request }) {
   const { admin } = await authenticate.admin(request);
   const data = await request.formData()
   const id = parseInt(data.get('id'))
-  try{
+  if(data.get('action') === 'active') {
+  const template = await getTemplate()
+  const asset = await updateCartFile(admin, session, "snippets/cart-drawer.liquid", template, id)
+  }
+  if(data.get('action') === "addexample") {
+    const option = await addOption(`<div>Free Shipping!!</div>`)
     const template = await getTemplate()
     const asset = await updateCartFile(admin, session, "snippets/cart-drawer.liquid", template, id)
-    console.log(asset)
-  } catch (e) {
-    console.error(e)
   }
+  
+    
  
   
   return null
@@ -100,6 +104,7 @@ async function updateCartFile(admin, session, path, content, theme_id) {
   asset.key = path
   asset.value = content
   await asset.save({update:true})
+  return asset
 }
 async function getTemplate() {
   const template = await db.superCart.findUnique({where: {id :  1}})
@@ -107,7 +112,16 @@ async function getTemplate() {
   const code = (`${template.title} \n ${template.option1} \n ${template.form} \n ${template.option2} \n ${template.total} \n ${template.option3} \n ${template.footer}`)
   return code
 }
-
+async function addOption(content) {
+  const template = await db.superCart.update({
+    where: {
+      id:1
+    },
+    data: {
+      option3: content
+    }
+  })
+}
 ///////////////////////////////////////////////////////
 
 
@@ -115,7 +129,7 @@ export default function Index() {
   // const nav = useNavigation();
   const data = useLoaderData()
   const submit = useSubmit();
-  const activeSuperCart = () => submit({id: data.id}, {method: 'PUT'})
+  const activeSuperCart = () => submit({action:"active", id: data.id}, {method: 'PUT'})
   const activeNull = () => submit({}, {method:'PUT'})
   console.log(data)
   return (
@@ -152,6 +166,7 @@ export default function Index() {
                     </Link>{" "}
                     mutation in our API references.
                   </Text>
+                  <Button size='large' onClick={()=>submit({action:'addexample', id: data.id}, {method:'PUT'})}>Add Free Shipping text</Button>
                 </VerticalStack>
               </VerticalStack>
             </Card>
