@@ -20,19 +20,3 @@ model Session {
   accessToken String
   userId      BigInt?
 }
-model themeId {
-  id Int @id @default(autoincrement())
-  shop             String
-  theme_id              BigInt
-  contentCartDrawer String
-}
-model superCart {
-  id Int @id @default(autoincrement())
-  title             String
-  option1            String
-  form               String
-  option2            String
-  total             String
-  option3           String
-  footer            String
-}

@@ -23,39 +23,8 @@ export const loader = async ({ request }) => {
   const {session } = await authenticate.admin(request);
   const {shop} = session
 
-  // return null
-  const isSaved = await db.themeId.findFirst({
-    where: {
-      shop
-    }
-  })
   
-  if(isSaved) {
-    return {value: isSaved.contentCartDrawer, id: Number(isSaved.theme_id)}
-  }
-  const theme = await admin.rest.resources.Theme.all({
-    session: session,
-    role: 'main'
-  })
-  if(theme.data[0].theme_store_id !== 887) {
-    return `Your theme is not available, please get theme 'Dawn'`
-  }
-  const cartDrawer = await admin.rest.resources.Asset.all({
-    session,
-    theme_id: theme.data[0].id,
-    asset: {
-      key: "snippets/cart-drawer.liquid"
-    }
-  })
-
-  const register = await db.themeId.create({
-    data: {
-      shop,
-      theme_id: theme.data[0].id,
-      contentCartDrawer: cartDrawer.data[0].value
-    }
-  })
-  return {value: cartDrawer.data[0].value, id: Number(theme.data[0].id)}
+  return null
 }
 
 
@@ -67,71 +36,17 @@ export const loader = async ({ request }) => {
 export async function action({ request }) {
   const { session } = await authenticate.admin(request);
   const { admin } = await authenticate.admin(request);
-  const data = await request.formData()
-  const id = parseInt(data.get('id'))
-  if(data.get('action') === 'active') {
-  const template = await getTemplate()
-  const asset = await updateCartFile(admin, session, "snippets/cart-drawer.liquid", template, id)
-  }
-  if(data.get('action') === "addexample") {
-    const option = await addOption(`<div>Free Shipping!!</div>`)
-    const template = await getTemplate()
-    const asset = await updateCartFile(admin, session, "snippets/cart-drawer.liquid", template, id)
-  }
-  
-    
- 
-  
+  const {shop} = session
   return null
 }
 
-
-///////////////////////////////////////////////
-
-
-/**
- * 
- * @param {*} admin 
- * @param {*} session 
- * @param {String} path 
- * @param {String} content 
- * @param {Number} theme_id 
- * @returns 
- */
-async function updateCartFile(admin, session, path, content, theme_id) {
-  const asset = new admin.rest.resources.Asset({session})
-  asset.theme_id = theme_id
-  asset.key = path
-  asset.value = content
-  await asset.save({update:true})
-  return asset
-}
-async function getTemplate() {
-  const template = await db.superCart.findUnique({where: {id :  1}})
-  if(template === null) throw new Error('Template not found')
-  const code = (`${template.title} \n ${template.option1} \n ${template.form} \n ${template.option2} \n ${template.total} \n ${template.option3} \n ${template.footer}`)
-  return code
-}
-async function addOption(content) {
-  const template = await db.superCart.update({
-    where: {
-      id:1
-    },
-    data: {
-      option3: content
-    }
-  })
-}
 ///////////////////////////////////////////////////////
-
 
 export default function Index() {
   // const nav = useNavigation();
   const data = useLoaderData()
   const submit = useSubmit();
   const activeSuperCart = () => submit({action:"active", id: data.id}, {method: 'PUT'})
-  const activeNull = () => submit({}, {method:'PUT'})
-  console.log(data)
   return (
     <Page>
       <ui-title-bar title="Your customized cart!">

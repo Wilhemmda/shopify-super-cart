@@ -3,6 +3,7 @@ const prisma = new PrismaClient()
 async function main() {
   const superCart = await prisma.superCart.create({
     data: {
+        shop : `demowil.myshopify.com`,
         title: `
         {% comment %}
   Renders cart drawer
