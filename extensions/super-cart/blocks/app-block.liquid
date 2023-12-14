@@ -1,0 +1,47 @@
+{%  comment  %}
+{% assign avg_rating = block.settings.product.metafields.demo.avg_rating.value | round %}
+
+<span style="color:{{ block.settings.colour }}">
+  {% render 'stars', rating: avg_rating %}
+</span>
+{% if avg_rating >= 4 %}
+  <br>
+  <img src="{{ "thumbs-up.png" | asset_img_url: '15x' }}" height="15" width="15" loading="lazy">
+  {{ 'ratings.home.recommendationText' | t }}
+{% endif %}
+{% endcomment %}
+<script src="{{ 'test.js' | asset_url }}" defer></script>
+<div>
+  <test-one prefix="Dec 31, 2023 15:37:25" style="color: {{ block.settings.color }}"></test-one>
+</div>
+<div>
+  <test-timer prefix="{{ block.settings.timer_date }}" style="color: {{ block.settings.color }}"></test-timer>
+</div>
+
+    
+
+<span style="color: {{ block.settings.color }}">
+App blocks let you build powerful integrations with online store themes.
+</span>
+
+{% render "app_snippet" %}
+{% schema %}
+  {
+    "name": "Hello World",
+    "target": "section",
+    "enabled_on": {
+      "templates": ["index"]
+    },
+    "settings": [
+        { "label": "Color", "id": "color", "type": "color", "default": "#000000" },
+        {
+                  "type": "text",
+                  "id": "timer_date",
+                  "label": "Date et heure de fin",
+                  "info": "Format: Sept 30, 2024 00:00",
+                  "default": "Dec 31, 2023 00:00"
+              }
+    ]
+  }
+{% endschema %}
+

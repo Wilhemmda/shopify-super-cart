@@ -2,7 +2,7 @@
 
 name = "super-cart"
 client_id = "0523518337bdfb0a2340016b919e85d0"
-application_url = "https://directly-conceptual-crest-sand.trycloudflare.com"
+application_url = "https://retired-flexible-leo-identical.trycloudflare.com"
 embedded = true
 
 [access_scopes]
@@ -11,9 +11,9 @@ scopes = "read_themes, write_themes, read_content, write_content"
 
 [auth]
 redirect_urls = [
-  "https://directly-conceptual-crest-sand.trycloudflare.com/auth/callback",
-  "https://directly-conceptual-crest-sand.trycloudflare.com/auth/shopify/callback",
-  "https://directly-conceptual-crest-sand.trycloudflare.com/api/auth/callback"
+  "https://retired-flexible-leo-identical.trycloudflare.com/auth/callback",
+  "https://retired-flexible-leo-identical.trycloudflare.com/auth/shopify/callback",
+  "https://retired-flexible-leo-identical.trycloudflare.com/api/auth/callback"
 ]
 
 [webhooks]

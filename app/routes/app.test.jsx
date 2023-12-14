@@ -27,16 +27,33 @@ export async function loader ({ request }) {
   const { admin } = await authenticate.admin(request);
   const {session } = await authenticate.admin(request);
   const {shop} = session
-  const response = await admin.graphql(
+  const responseId = await admin.graphql(
     `query {
       currentAppInstallation {
         id
       }
     }`
   )
-  const data = await response.json()
-
-  return json({id :data.data.currentAppInstallation.id, shop})
+  const data = await responseId.json()
+  const responseData = await admin.graphql(
+    `#graphql
+    query divContent($id: ID!, $namespace: String!, $key: String!) {
+      appInstallation(id : $id) {
+        apiKey: metafield (namespace : $namespace, key: $key){
+          value
+        }
+      }
+    }
+    `,
+    {variables: {
+      id: data.data.currentAppInstallation.id, shop,
+      namespace : "super_cart_metafields",
+      key: 'div'
+    }
+  }
+  )
+  const div = await responseData.json()
+  return json({id :data.data.currentAppInstallation.id, div, shop})
 }
 
 export const action= async ({request}) =>{
@@ -66,20 +83,21 @@ export const action= async ({request}) =>{
         variables: {
           metafieldsSetInput: {
             namespace: "secret_keys",
-            key: "div",
-            type: "multi_line_text_field",
-            value: "Free Shipping!",
+            key: "api_key",
+            type: "single_line_text_field",
+            value: "aS1hbS1hLXNlY3JldC1hcGkta2V5Cg==",
             ownerId: id
           }
       }}
     )
-    console.log(response.json())
+    const addResponse = await response.json()
+    console.log(addResponse)
     }  
     
      if (data.get('action') === 'delete') {
       const response = await admin.graphql(
         `#graphql
-        mutation CreateAppDataMetafield($metafieldsSetInput: [MetafieldsSetInput!]!) {
+        mutation UpdateAppDataMetafield($metafieldsSetInput: [MetafieldsSetInput!]!) {
           metafieldsSet(metafields: $metafieldsSetInput) {
             metafields {
               id
@@ -95,32 +113,33 @@ export const action= async ({request}) =>{
         {
           variables: {
             metafieldsSetInput: {
-              namespace: "secret_keys",
+              namespace: "super_cart_metafields",
               key: "div",
-              type: "multi_line_text_field",
+              type: "single_line_text_field",
               value: "",
               ownerId: id
             }
         }}  
         
       )
-       console.log(response)
+      const deleteResponse = await response.json()
+      console.log(deleteResponse)
      }
      return null
 }
   
 export default function testPage() {
-  const {id, shop} = useLoaderData()
+  const {id, div, shop} = useLoaderData()
   
-  console.log(id, shop)
+  console.log(id, div)
   const submit = useSubmit()
   const addDiv = () => submit({id: id, action : 'add'}, {method: 'POST'})
-  const deleteDiv = () => submit({id: id, action : 'delete'}, {method: 'DELETE'})
+  const deleteDiv = () => submit({id: id, action : 'delete'}, {method: 'POST'})
 
   return (
     <Page>
       <ui-title-bar title="Dashboard">
-        <a href="https://demowil.myshopify.com/admin/themes/current/editor?context=apps&template=&activateAppId=24492438-4ce6-406a-8ce0-0af353f6c5d1/app-embed">
+        <a href={`https://${shop}/admin/themes/current/editor?context=apps&template=&activateAppId=24492438-4ce6-406a-8ce0-0af353f6c5d1/app-embed`}>
         Active super cart
         </a>
         <button onClick={addDiv}>Add div</button>

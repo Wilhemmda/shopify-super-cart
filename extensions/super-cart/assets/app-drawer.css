@@ -1,0 +1,21 @@
+.cartDrawer {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+    max-width: 330px;
+    background-color: #fff;
+    z-index: 1000;
+    visibility: hidden;
+    display: flex;
+    justify-content: flex-end;
+    flex-direction: column;
+  
+    transition: visibility var(--duration-default) ease;
+  }
+  
+  .cartDrawer.active {
+    visibility: visible;
+  }
