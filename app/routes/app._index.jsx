@@ -1,123 +1,172 @@
-import { useCallback, useEffect, useState } from "react";
 import { json } from "@remix-run/node";
-import { useActionData, useLoaderData, useNavigation, useParams, useSubmit } from "@remix-run/react";
+import { useLoaderData } from "@remix-run/react";
+import { Button, ButtonGroup, ChoiceList, Divider, Frame, Icon, Modal, OptionList, Page, Popover } from "@shopify/polaris";
+import { getVendors, getproductTypes } from "~/models/helpers.server";
+import { authenticate } from "~/shopify.server";
+import { Card, List, Text, BlockStack, InlineGrid} from '@shopify/polaris';
+import React, { useCallback, useState } from 'react';
 import {
-  Page,
-  Layout,
-  Text,
-  VerticalStack,
-  Card,
-  Button,
-  HorizontalStack,
-  Box,
-  Divider,
-  List,
-  Link,
-  TextField,
-  Form,
-  FormLayout,
-  Checkbox,
-} from "@shopify/polaris";
-import db from '../db.server'
-import { authenticate } from "../shopify.server";
+  DragHandleMinor, DeleteMinor, DuplicateMinor
+} from '@shopify/polaris-icons';
 
-
-export const loader = async ({ request }) => {
+export async function loader ({ request }) {
   const { admin } = await authenticate.admin(request);
   const {session } = await authenticate.admin(request);
   const {shop} = session
-
-  
-  return null
+  // Récupère les vendeurs et les types de produits existants
+  const response = await admin.graphql(
+    `#graphql
+    query allTypesAndVendors {
+      products(first: 30) {
+        edges{
+          node{
+            productType,
+            vendor
+          }
+        }
+      }
+    }`,
+  )
+  const data = await response.json()
+  const vendors = getVendors(data)
+  const productTypes = getproductTypes(data)
+  return json({vendors, productTypes})
 }
+export default function index() {
+  const{vendors, productTypes} = useLoaderData()
+  console.log("Product Types:", productTypes);
+  console.log("Vendors:", vendors);
+
+/////////////////////// Partie menus deroulants 'popover' avec polaris
+
+  const [selectedTypes, setSelectedTypes] = useState([]);
+  const [selectedVendors, setSelectedVendors] = useState([])
+  const [productTypesActive, setProductTypesActive] = useState(false);
+  const [vendorsActive, setVendorsActive] = useState(false);
 
 
-///////////////////////////////////////////////////////
-
-
-
-
-export async function action({ request }) {
-  const { session } = await authenticate.admin(request);
-  const { admin } = await authenticate.admin(request);
-  const {shop} = session
-  const data = await request.formData()
-  console.log(data)
-  return null
-}
-
-///////////////////////////////////////////////////////
-
-export default function Index() {
-  // const nav = useNavigation();
-  const data = useLoaderData()
-  const submit = useSubmit();
-
-
-  const [textFieldValue, setTextFieldValue] = useState('Free truc');
-  const handleTextFieldChange = useCallback(
-    (value) => setTextFieldValue(value),
+  const toggleProductTypes = useCallback(
+    () => setProductTypesActive((productTypesActive) => !productTypesActive),
     [],
   );
-  const handleChange = useCallback((value) => setTextFieldValue(value), []);
-  const handleSubmit = useCallback(() => {
-    setTextFieldValue('');
-    try {
-      const response = submit(
-        { textFieldValue },
-        {
-          method: 'POST',
-          replace: true,
-        }
-      );
-      setTextFieldValue('Free truc');
-    } catch (error) {
-      console.error('Erreur lors de la soumission du formulaire :', error);
-    }
-  }, []);
-  
-  useEffect(() => {
-    if (textFieldValue !== 'Free truc') {
-      handleSubmit();
-    }
-  }, [textFieldValue, handleSubmit]);
-  return (
-    <Page>
-      <ui-title-bar title="Your customized cart!">
-      </ui-title-bar>
-      <VerticalStack gap="5">
-        <Layout>
-          <Layout.Section>
-            <Card>
-              <VerticalStack gap="5">
-                <VerticalStack gap="2">
-                  <Text as="h2" variant="headingMd">
-                    OK
-                  </Text>
-                  <Form onSubmit={handleSubmit}>
-                    <FormLayout>
-                      <TextField
-                        label="Phrase"
-                        value={textFieldValue}
-                        onChange={handleChange}
-                        clearButton                        
-                        autoComplete="off"
-                        helpText={
-                          <span>
-                            Write some text, try 'Free Shipping!'
-                          </span>
-                        }
-                      />
-                      <Button submit>Submit</Button>
-                    </FormLayout>
-                  </Form>
-
-                </VerticalStack>
-              </VerticalStack>
-            </Card>
-          </Layout.Section>
-        </Layout>
-      </VerticalStack>
-    </Page>
+  const toggleVendors = useCallback(
+    () => setVendorsActive((vendorsActive) => !vendorsActive),
+    [],
   );
+
+  const productTypesActivator =() => {
+    return(
+    <Button onClick={toggleProductTypes} disclosure>
+      Product Types 
+    </Button>
+    )
+  }
+  const vendorsActivator = () => {
+    return(
+      <Button onClick={toggleVendors} disclosure>Vendors</Button>
+    )
+  }
+  const [selected, setSelected] = useState(['hidden']);
+
+  const handleChange = useCallback((value) => setSelected(value), []);
+
+//////////////////////// Partie quand tu cliques sur supprimer ça affiche une fenetre
+
+  const [active, setActive] = useState(false);
+
+  const toggleModal = useCallback(() => setActive((active) => !active), []);
+
+  const destroy = <Button 
+  icon={<Icon
+    source={DeleteMinor}
+    tone="base"/>} 
+  onClick={toggleModal}
+  variant="monochromePlain"
+  tone="critical"
+  ></Button>;
+///////////////////////////////
+
+  return(
+    <Page
+    primaryAction={{content: 'Save',  onAction: () => {},}}>
+        <Card roundedAbove="md" background="bg-surface-secondary">
+          <BlockStack>
+           <InlineGrid columns="1fr auto">
+            <Text as="h2" variant="headingSm">
+             Staff accounts
+            </Text>
+            <ButtonGroup>
+              <Popover
+                active={productTypesActive}
+                activator={productTypesActivator()}
+                onClose={toggleProductTypes}
+                autofocusTarget="first-node"
+              >
+                <OptionList
+                  allowMultiple
+                  onChange={setSelectedTypes}
+                  options={productTypes.map((value) => {return {value: value, label: value}})}
+                  selected={selectedTypes}
+                />
+              </Popover>
+              <Popover
+                active={vendorsActive}
+                activator={vendorsActivator()}
+                onClose={toggleVendors}
+              >
+                <OptionList
+                  allowMultiple
+                  onChange={setSelectedVendors}
+                  options={vendors.map((value) => {return {value: value, label: value}})}
+                  selected={selectedVendors}
+                />
+              </Popover>
+             <Button
+              onClick={() => {}}
+              icon={<Icon
+                source={DuplicateMinor}
+                tone="base"
+              />}
+             ></Button>
+             <Modal
+              activator={destroy}
+              open={active}
+              onClose={toggleModal}
+              title="Delete this set?"
+              primaryAction={{
+                destructive: true,
+                content: 'Delete set',
+                onAction: toggleModal,
+              }}
+              secondaryActions={[
+                {
+                  content: 'Continue editing',
+                  onAction: toggleModal,
+                },
+              ]}
+            >
+              <Modal.Section>
+                If you delete this set, you can't retrieve all that you created.
+              </Modal.Section>
+            </Modal>
+            </ButtonGroup>
+           </InlineGrid>
+          </BlockStack>
+          
+          <Text as="h1">Set 1</Text>
+          <Text as="p" variant="bodyMd">
+            The set is shown for:
+          </Text>
+          <List type="bullet">
+             <List.Item>Yellow shirt</List.Item>
+             <List.Item>Red shirt</List.Item>
+             <List.Item>Green shirt</List.Item>
+          </List>
+          <Divider />
+            <Icon
+              source={DragHandleMinor}
+            />
+        </Card>
+    </Page>
+  )
 }
