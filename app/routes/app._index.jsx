@@ -1,5 +1,5 @@
 import { json } from "@remix-run/node";
-import { useLoaderData } from "@remix-run/react";
+import { useLoaderData, useSubmit } from "@remix-run/react";
 import { Button, ButtonGroup, ChoiceList, Divider, Frame, Icon, Modal, OptionList, Page, Popover } from "@shopify/polaris";
 import { getVendors, getproductTypes } from "~/models/helpers.server";
 import { authenticate } from "~/shopify.server";
@@ -14,6 +14,15 @@ export async function loader ({ request }) {
   const {session } = await authenticate.admin(request);
   const {shop} = session
   // Récupère les vendeurs et les types de produits existants
+  const responseId = await admin.graphql(
+    `query {
+      currentAppInstallation {
+        id
+      }
+    }`
+  )
+  let id = await responseId.json()
+  id = id.data.currentAppInstallation.id
   const response = await admin.graphql(
     `#graphql
     query allTypesAndVendors {
@@ -30,13 +39,58 @@ export async function loader ({ request }) {
   const data = await response.json()
   const vendors = getVendors(data)
   const productTypes = getproductTypes(data)
-  return json({vendors, productTypes})
+  return json({vendors, productTypes, id})
 }
+
+export async function action({request}) {
+  const { session } = await authenticate.admin(request);
+  const { admin } = await authenticate.admin(request)
+
+  const data = await request.formData()
+  const action = data.get('action')
+  if(action === 'createTestMetafield') {
+    const response = await admin.graphql(
+      `#graphql
+        mutation CreateAppDataMetafield($metafieldsSetInput:[MetafieldsSetInput!]!) {
+          metafieldsSet(metafields: $metafieldsSetInput) {
+            metafields {
+            id
+            namespace
+            key
+          }
+          userErrors {
+            field
+            message
+          }
+          }
+        }
+      `,
+      {
+        variables: {
+          metafieldsSetInput: {
+            namespace: "block_metafields",
+            key: "test",
+            type: "rich_text_field",
+            value: "aS1hbS1hLXNlY3JldC1hcGkta2V5Cg==",
+            ownerId: 'sd'
+          }
+        }
+      }
+    )
+  }
+  return null
+}
+
 export default function index() {
-  const{vendors, productTypes} = useLoaderData()
+  const{vendors, productTypes, id} = useLoaderData()
   console.log("Product Types:", productTypes);
   console.log("Vendors:", vendors);
+  console.log('id:', id)
 
+
+  // Bouton pour test créer un metafield de test
+  const submit = useSubmit()
+  const addMetafieldTest = () => submit({action:'createTestMetafield', id: id}, {method:'POST'})
 /////////////////////// Partie menus deroulants 'popover' avec polaris
 
   const [selectedTypes, setSelectedTypes] = useState([]);
@@ -88,7 +142,9 @@ export default function index() {
 
   return(
     <Page
-    primaryAction={{content: 'Save',  onAction: () => {},}}>
+    primaryAction={{content: 'Save',  onAction: () => {},}}
+    secondaryActions={[{content: 'Créer un metafield test', onAction: () => addMetafieldTest()}]}
+    >
         <Card roundedAbove="md" background="bg-surface-secondary">
           <BlockStack>
            <InlineGrid columns="1fr auto">

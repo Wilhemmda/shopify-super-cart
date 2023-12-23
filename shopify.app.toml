@@ -2,7 +2,7 @@
 
 name = "super-cart"
 client_id = "0523518337bdfb0a2340016b919e85d0"
-application_url = "https://necessary-advertisers-highlight-holmes.trycloudflare.com"
+application_url = "https://exchange-union-integrated-suggestion.trycloudflare.com"
 embedded = true
 
 [access_scopes]
@@ -11,9 +11,9 @@ scopes = "read_themes, write_themes, read_content, write_content, read_products"
 
 [auth]
 redirect_urls = [
-  "https://necessary-advertisers-highlight-holmes.trycloudflare.com/auth/callback",
-  "https://necessary-advertisers-highlight-holmes.trycloudflare.com/auth/shopify/callback",
-  "https://necessary-advertisers-highlight-holmes.trycloudflare.com/api/auth/callback"
+  "https://exchange-union-integrated-suggestion.trycloudflare.com/auth/callback",
+  "https://exchange-union-integrated-suggestion.trycloudflare.com/auth/shopify/callback",
+  "https://exchange-union-integrated-suggestion.trycloudflare.com/api/auth/callback"
 ]
 
 [webhooks]
